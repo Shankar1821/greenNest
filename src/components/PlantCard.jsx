@@ -5,14 +5,36 @@ import { useCart } from '../context/CartContext';
 const PlantCard = ({ plant }) => {
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
+  const [selectedOption, setSelectedOption] = useState('Standard');
+
+  const getOptionDetails = (option) => {
+    switch (option) {
+      case 'Ceramic Pot':
+        return { priceOffset: 120 };
+      case 'Clay Pot':
+        return { priceOffset: 80 };
+      case 'Standard':
+      default:
+        return { priceOffset: 0 };
+    }
+  };
+
+  const currentOffset = getOptionDetails(selectedOption).priceOffset;
+  const currentPrice = plant.price + currentOffset;
+  const currentOriginalPrice = plant.originalPrice + currentOffset;
 
   const handleAdd = () => {
-    addToCart(plant);
+    addToCart({
+      ...plant,
+      price: currentPrice,
+      originalPrice: currentOriginalPrice,
+      selectedOption: selectedOption
+    });
     setAdded(true);
     setTimeout(() => setAdded(false), 1500);
   };
 
-  const discountPercent = Math.round(((plant.originalPrice - plant.price) / plant.originalPrice) * 100);
+  const discountPercent = Math.round(((currentOriginalPrice - currentPrice) / currentOriginalPrice) * 100);
 
   return (
     <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -114,6 +136,58 @@ const PlantCard = ({ plant }) => {
           {plant.description}
         </p>
 
+        {/* Pot Style Selection Radio Buttons */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', margin: '8px 0 4px 0' }}>
+          <span style={{ fontSize: '0.7rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Pot Option:
+          </span>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {['Standard', 'Clay Pot', 'Ceramic Pot'].map((option) => {
+              const isSelected = selectedOption === option;
+              const details = getOptionDetails(option);
+              return (
+                <label
+                  key={option}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '4px 8px',
+                    borderRadius: '8px',
+                    border: isSelected ? '1px solid var(--primary)' : '1px solid var(--border-color)',
+                    backgroundColor: isSelected ? 'rgba(6, 95, 70, 0.06)' : 'rgba(0, 0, 0, 0.02)',
+                    fontSize: '0.72rem',
+                    cursor: 'pointer',
+                    fontWeight: isSelected ? '600' : '400',
+                    color: isSelected ? 'var(--primary)' : 'var(--text-main)',
+                    transition: 'all 0.2s ease',
+                    userSelect: 'none'
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name={`option-${plant.id}`}
+                    value={option}
+                    checked={isSelected}
+                    onChange={() => setSelectedOption(option)}
+                    style={{
+                      accentColor: 'var(--primary)',
+                      margin: 0,
+                      cursor: 'pointer',
+                      width: '12px',
+                      height: '12px'
+                    }}
+                  />
+                  <span>
+                    {option === 'Standard' ? 'Standard' : option.split(' ')[0]}
+                    {details.priceOffset > 0 && ` (+₹${details.priceOffset})`}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Price & Buy controls */}
         <div style={{
           display: 'flex',
@@ -129,7 +203,7 @@ const PlantCard = ({ plant }) => {
                 textDecoration: 'line-through',
                 color: 'var(--text-muted)'
               }}>
-                ₹{plant.originalPrice.toFixed(2)}
+                ₹{currentOriginalPrice.toFixed(2)}
               </span>
             )}
             <span style={{
@@ -138,7 +212,7 @@ const PlantCard = ({ plant }) => {
               color: 'var(--primary)',
               lineHeight: '1'
             }}>
-              ₹{plant.price.toFixed(2)}
+              ₹{currentPrice.toFixed(2)}
             </span>
           </div>
 

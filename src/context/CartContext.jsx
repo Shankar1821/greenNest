@@ -13,29 +13,31 @@ export const CartProvider = ({ children }) => {
   }, [cartItems]);
 
   const addToCart = (plant) => {
+    const selectedOption = plant.selectedOption || 'Standard';
+    const cartItemId = `${plant.id}-${selectedOption}`;
     setCartItems((prevItems) => {
-      const existing = prevItems.find((item) => item.id === plant.id);
+      const existing = prevItems.find((item) => item.cartItemId === cartItemId);
       if (existing) {
         return prevItems.map((item) =>
-          item.id === plant.id ? { ...item, qty: item.qty + 1 } : item
+          item.cartItemId === cartItemId ? { ...item, qty: item.qty + 1 } : item
         );
       }
-      return [...prevItems, { ...plant, qty: 1 }];
+      return [...prevItems, { ...plant, selectedOption, cartItemId, qty: 1 }];
     });
   };
 
-  const removeFromCart = (plantId) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== plantId));
+  const removeFromCart = (cartItemId) => {
+    setCartItems((prevItems) => prevItems.filter((item) => item.cartItemId !== cartItemId));
   };
 
-  const updateQty = (plantId, newQty) => {
+  const updateQty = (cartItemId, newQty) => {
     if (newQty <= 0) {
-      removeFromCart(plantId);
+      removeFromCart(cartItemId);
       return;
     }
     setCartItems((prevItems) =>
       prevItems.map((item) =>
-        item.id === plantId ? { ...item, qty: newQty } : item
+        item.cartItemId === cartItemId ? { ...item, qty: newQty } : item
       )
     );
   };
